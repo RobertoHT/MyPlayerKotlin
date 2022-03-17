@@ -3,33 +3,35 @@ package com.devexperto.kda.myplayerkotlin
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import com.devexperto.kda.myplayerkotlin.databinding.ViewMediaItemBinding
 
-class MediaAdapter(private val items: List<MediaItem>) : RecyclerView.Adapter<MediaAdapter.ViewHolder>() {
+class MediaAdapter(private val items: List<MediaItem>, private val listener: (String) -> Unit) : RecyclerView.Adapter<MediaAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.view_media_item, parent, false)
-        return ViewHolder(view)
+        val binding = ViewMediaItemBinding.inflate(LayoutInflater.from(parent.context))
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
         holder.bind(item)
+        holder.itemView.setOnClickListener { listener(item.title) }
     }
 
     override fun getItemCount(): Int = items.size
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-        private val title: TextView = view.findViewById(R.id.mediaTitle)
-        private val thumb: ImageView = view.findViewById(R.id.mediaThumb)
+    class ViewHolder(private val binding: ViewMediaItemBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(mediaItem: MediaItem) {
-            title.text = mediaItem.title
-            Glide.with(thumb.context).load(mediaItem.url).into(thumb)
+            with(binding) {
+                mediaTitle.text = mediaItem.title
+                mediaThumb.loadUrl(mediaItem.url)
+                mediaVideoIndicator.visibility = when (mediaItem.type) {
+                    Type.VIDEO -> View.VISIBLE
+                    Type.PHOTO -> View.GONE
+                }
+            }
         }
     }
 }
