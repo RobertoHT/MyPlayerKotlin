@@ -14,7 +14,9 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
-    private val adapter = MediaAdapter { toast(it) }
+    private val adapter = MediaAdapter {
+        startActivity<DetailActivity>(DetailActivity.EXTRA_ID to it)
+    }
     private lateinit var progress: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         updateItems()
     }
 
-    private fun updateItems(filter: Int = R.id.filter_all) {
+    private fun updateItems(filter: Filter = Filter.None) {
         lifecycleScope.launch {
             progress.visibility = View.VISIBLE
             adapter.items = withContext(Dispatchers.IO) { getFilterItems(filter) }
@@ -35,13 +37,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getFilterItems(filter: Int) : List<MediaItem> {
+    private fun getFilterItems(filter: Filter) : List<MediaItem> {
         return MediaProvider.getItems().let { media ->
             when (filter) {
-                R.id.filter_all -> media.filter { it.type == Type.PHOTO }
-                R.id.filter_photos -> media.filter { it.type == Type.VIDEO }
-                R.id.filter_videos -> MediaProvider.getItems()
-                else -> emptyList()
+                Filter.None -> media
+                is Filter.ByType -> media.filter { it.type == filter.type }
             }
         }
     }
@@ -52,7 +52,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        updateItems(item.itemId)
+        val filter = when (item.itemId) {
+            R.id.filter_photos -> Filter.ByType(Type.PHOTO)
+            R.id.filter_videos -> Filter.ByType(Type.VIDEO)
+            else -> Filter.None
+        }
+
+        updateItems(filter)
         return super.onOptionsItemSelected(item)
     }
 }

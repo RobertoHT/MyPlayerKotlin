@@ -1,5 +1,5 @@
 package com.devexperto.kda.myplayerkotlin
 
-data class MediaItem(val title: String, val url: String, val type: Type)
+data class MediaItem(val id: Int, val title: String, val url: String, val type: Type)
 
 enum class Type {PHOTO, VIDEO}
